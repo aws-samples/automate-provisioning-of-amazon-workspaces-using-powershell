@@ -1,13 +1,7 @@
-## My Project
+## Amazon Workspaces Automate Provisiong Using PowerShell
 
-TODO: Fill this README out!
+Sample code to query an Active Directory group members and automate the creation of Amazon Workspaces using PowerShell.
 
-Be sure to:
+## License Summary
 
-* Change the title in this README
-* Edit your repository description on GitHub
-
-## License
-
-This library is licensed under the MIT-0 License. See the LICENSE file.
-
+This sample code is made available under a modified MIT license. See the LICENSE file.
