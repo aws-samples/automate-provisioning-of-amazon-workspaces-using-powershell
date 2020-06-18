@@ -28,7 +28,7 @@ $MyADGroup = Read-Host -Prompt "`n`nEnter the AD Group name for which you want t
 
 Try
 {
-    $Users = Get-ADGroupMember $MyADGroup | where-object {$_.objectclass -eq 'User'} | Get-ADUser -Properties enabled | Where-Object {$_.enabled -eq $true} | select SamAccountName
+    $Users = Get-ADGroupMember $MyADGroup | where-object {$_.objectclass -eq 'User'} | Get-ADUser -Properties enabled | Where-Object {$_.enabled -eq $true} | Select-Object SamAccountName
 }
 Catch
 {
@@ -77,12 +77,12 @@ Write-host "Region" $MyRegion "selected."
 
 
 #------------------------------------------------------------------------
-$Directories = Get-DSDirectory -Region $MyRegion | select DirectoryId, Alias, DNSIpAddrs, Edition, Name, Type
+$Directories = Get-DSDirectory -Region $MyRegion | Select-Object DirectoryId, Alias, DNSIpAddrs, Edition, Name, Type
 
 if($Directories.DirectoryId.count -ge 1) {    
     Do {
         Write-Host "`n`n`nHere are the Directories in that region:"
-        $Directories | select DirectoryId, Name, Type, Edition | FT
+        $Directories | Select-Object DirectoryId, Name, Type, Edition | Format-Table
         $MyDirectory = Read-Host -Prompt 'Type the DirectoryId of the directory to use for provisioning'
         }
         While (-not ($Directories | Where-Object {$_.DirectoryId -eq $MyDirectory}))
@@ -97,14 +97,14 @@ if($Directories.DirectoryId.count -ge 1) {
 #------------------------------------------------------------------------
 
 #Query the bundles personal and publicly available from AWS to compare the bundle input by the user against
-$MyBundles = Get-WKSWorkspaceBundle -Region $MyRegion | select BundleId, ImageId, Name, Owner
-$AWSBundles = Get-WKSWorkspaceBundle -Owner Amazon -Region $MyRegion | Where-Object {$_.Name -notlike '*Win*7*'} | select BundleId, ImageId, Name, Owner
+$MyBundles = Get-WKSWorkspaceBundle -Region $MyRegion | Select-Object BundleId, ImageId, Name, Owner
+$AWSBundles = Get-WKSWorkspaceBundle -Owner Amazon -Region $MyRegion | Where-Object {$_.Name -notlike '*Win*7*'} | Select-Object BundleId, ImageId, Name, Owner
 $AllBundles = $AWSBundles + $MyBundles
 
 
 Do {
     Write-Host "`n`n`nHere are the WorkSpace Bundles in that region:"
-    $AllBundles  | sort Owner -Descending | sort Name | select * | FT
+    $AllBundles  | sort Owner -Descending | sort Name | Select-Object * | Format-Table
     $SelectedBundleId = Read-Host -Prompt 'Type the BundleId of the bundle to use for provisioning'
     }
     While (-not ($AllBundles | Where-Object {$_.BundleId -eq $SelectedBundleId}))
@@ -132,14 +132,14 @@ ForEach($User in $Users.SamAccountName)
         #If the workspace creation is successful output and log user and WorkSpace ID
         "Resource creation for $User is pending with ID:  " + $result.PendingRequests.WorkSpaceId
         $Status = "Resource creation is pending"
-        $Status | select @{Name="Date";Expression={$Date}}, @{Name="Status";Expression={$Status}}, @{Name="User";Expression={$User}}, @{Name="WorkSpaceId";Expression={$result.PendingRequests.WorkSpaceId}} | export-csv ($logpath + "workspaceslog.csv") -notypeinformation -Append
+        $Status | Select-Object @{Name="Date";Expression={$Date}}, @{Name="Status";Expression={$Status}}, @{Name="User";Expression={$User}}, @{Name="WorkSpaceId";Expression={$result.PendingRequests.WorkSpaceId}} | export-csv ($logpath + "workspaceslog.csv") -notypeinformation -Append
     }
 
-    If ($result.FailedRequests.ErrorCode -ne $null) {
+    If ($null -ne $result.FailedRequests.ErrorCode) {
         #If the workspace creation is failed output and log user and reason
         "Resource creation for $User failed with message:  " + $result.FailedRequests.ErrorMessage
         $Status = "Resource creation failed"
-        $Status | select @{Name="Date";Expression={$Date}}, @{Name="Status";Expression={$result.FailedRequests.ErrorMessage}}, @{Name="User";Expression={$User}}, @{Name="WorkSpaceId";Expression={$result.PendingRequests.WorkSpaceId}} | export-csv ($logpath + "workspaceslog.csv") -notypeinformation -Append
+        $Status | Select-Object @{Name="Date";Expression={$Date}}, @{Name="Status";Expression={$result.FailedRequests.ErrorMessage}}, @{Name="User";Expression={$User}}, @{Name="WorkSpaceId";Expression={$result.PendingRequests.WorkSpaceId}} | export-csv ($logpath + "workspaceslog.csv") -notypeinformation -Append
     }
 }
 

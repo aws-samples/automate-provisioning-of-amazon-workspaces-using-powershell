@@ -1,4 +1,4 @@
-## Amazon Workspaces Automate Provisiong Using PowerShell
+## Amazon Workspaces Automate Provisioning Using PowerShell
 
 Sample code to query an Active Directory group members and automate the creation of Amazon Workspaces using PowerShell.
 
