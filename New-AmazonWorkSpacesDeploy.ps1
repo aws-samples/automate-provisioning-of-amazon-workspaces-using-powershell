@@ -112,13 +112,37 @@ Write-host "BundleId" $SelectedBundleId "selected."
 
 #------------------------------------------------------------------------
 
+#Prompting for running mode
+[Amazon.WorkSpaces.Model.WorkspaceProperties] $WorkspaceProperties = New-object -TypeName Amazon.WorkSpaces.Model.WorkspaceProperties
+$defaultrunningmode = "ALWAYS_ON"
+$defaultrunningmodetimeout = "60"
+$runningmodetimeoutvalues = 1..2880 |Where-Object {$_ % 60 -eq 0}
+
+Do {
+    if (!($UserRunningMode = Read-Host "Choose a running mode either AUTO_STOP or ALWAYS_ON: [$defaultrunningmode]")) { $UserRunningMode = $defaultrunningmode }
+    }
+    While (-not ($UserRunningMode | Where-Object {$_ -eq 'ALWAYS_ON' -or $_ -eq 'AUTO_STOP'}))
+
+if ($UserRunningMode -eq 'AUTO_STOP'){
+Do {
+    if (!($userrunningmodetimeout = Read-Host "Choose an AUTO_STOP timeout value 60-2880 minutes in increments of 60: [$defaultrunningmodetimeout]")) { $userrunningmodetimeout = $defaultrunningmodetimeout }
+    }
+    While (-not ($userrunningmodetimeout | Where-Object {$_ -in $runningmodetimeoutvalues}))
+    
+    $WorkspaceProperties.RunningMode = [Amazon.Workspaces.RunningMode]::AUTO_STOP
+    $WorkspaceProperties.RunningModeAutoStopTimeoutInMinutes = $userrunningmodetimeout
+}
+
+#------------------------------------------------------------------------
+
 ForEach($User in $Users.SamAccountName)
 {
     #Create the actual workspaces
     Try
     {
-        $result = New-WKSWorkspace -Region $MyRegion -Workspace @{"BundleID" = $SelectedBundleId; "DirectoryId" = $MyDirectory; "UserName" = $User}
+        $result = New-WKSWorkspace -Region $MyRegion -Workspace @{"BundleID" = $SelectedBundleId; "DirectoryId" = $MyDirectory; "UserName" = $User; "WorkspaceProperties" = $WorkspaceProperties}
     }
+
     Catch
     {
         $ErrorMessage = $_.Exception.Message
